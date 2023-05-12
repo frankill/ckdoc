@@ -66,7 +66,7 @@ from
 ```
 
 windowFunnel 函数中计算level的函数实现
-
+  https://github.com/ClickHouse/ClickHouse/blob/master/src/AggregateFunctions/AggregateFunctionWindowFunnel.h#L153
 ``` c++
 UInt8 getEventLevel(Data & data) const
 {
@@ -158,60 +158,4 @@ UInt8 getEventLevel(Data & data) const
 ```
  
 
-``` c++
-
-// 列数据首先整理成AggregateFunctionWindowFunnelData结构体，add方法用于将数据添加到事件列表中，后续共计算level调用
-
-void add(AggregateDataPtr __restrict place, const IColumn ** columns, const size_t row_num, Arena *) const override
-{
-    bool has_event = false;
-    const auto timestamp = assert_cast<const ColumnVector<T> *>(columns[0])->getData()[row_num];
-    /// reverse iteration and stable sorting are needed for events that are qualified by more than one condition.
-    for (auto i = events_size; i > 0; --i)
-    {
-        auto event = assert_cast<const ColumnVector<UInt8> *>(columns[i])->getData()[row_num];
-        if (event)
-        {
-            this->data(place).add(timestamp, i);
-            has_event = true;
-        }
-    }
-
-    if (strict_order && !has_event)
-        this->data(place).add(timestamp, 0); // 0用来标识非事件链中事件
-}
-
-static constexpr size_t max_events = 32;
-
-template <typename T>
-struct AggregateFunctionWindowFunnelData
-{
-    using TimestampEvent = std::pair<T, UInt8>;
-    using TimestampEvents = PODArrayWithStackMemory<TimestampEvent, 64>;
-
-    bool sorted = true;
-    TimestampEvents events_list;
-    
-    void add(T timestamp, UInt8 event)
-    {
-        /// 由于大多数事件应该已经按照时间戳排序。
-        /// 通过将当前时间戳与最后一个时间戳进行比较，检查 events_list 是否仍然按时间戳排序。
-        /// 如果当前时间戳大于或等于最后一个时间戳，则保持排序标志为真。
-        /// 否则，将排序标志设置为假。
-        if (sorted && events_list.size() > 0)
-        {
-            if (events_list.back().first == timestamp)
-                sorted = events_list.back().second <= event;
-            else
-                sorted = events_list.back().first <= timestamp;
-        }
-    
-        /// 将新的事件（时间戳，事件）添加到 events_list 中。
-        events_list.emplace_back(timestamp, event);
-    }
-    
-    ......
-}
-
-```
  
