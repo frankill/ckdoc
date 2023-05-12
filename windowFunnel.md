@@ -113,7 +113,7 @@ UInt8 getEventLevel(Data & data) const
         // 这里其实是有问题的，如果出现1 3 1 3 这种事件序列，那么返回的是1 ，但是实际上应该是2 才对
         else if (strict_deduplication && events_timestamp[event_idx].has_value())
         {
-            return data.events_list[i - 1].second; // 这段代码有bug，会出现完全不同的情况 如下图
+            return data.events_list[i - 1].second; 
         }
         // 如果开启了严格顺序且存在第一个事件，但前一个事件级别对应的时间戳不存在，则返回第一个空缺的事件级别
         // 时间戳为null时的情况
