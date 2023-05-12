@@ -37,13 +37,15 @@ window 是当前的事件下标 <= 第一个事件的下标+ window
 strict_order
 不属于事件链的下一个事件会中断事件链，有序包含了2层含义
 1 时间戳必须连续，不能缺失，2 事件log中不能包含无效事件(不在事件链中)
+目前来看其实有点疑惑，虽然能保证非事件链中事件出现然后中断，但是在事件链中的会出现不一致的情况
+当时间序列 [1,3,2,3,4,2] 时，返回为2， 当时间序列[1,3,4,3,4,2] 返回为4 ，函数执行windowFunnel(10,'strict_order')(va, vb =1, vb=3, vb=4,vb=2) 
 
 strict_deduplication
 当前事件是已经存在，则返回上一个记录的事件级别，事件级别1在考虑范围内
-事件链事件按照时间序列   
+这里其实是有问题的，如果出现1 3 1 3 这种事件序列，那么返回的是1 ，但是实际上应该是2 才对， 也就是直接返回 当前事件级别 就行吧
 
 strict_increase 
-基于数据已经通过时间戳进行排序，同时也保证了事件链的顺序插入，暂时没想到解决的场景是什么
+不知道使用场景
 
 ```  sql 
 with [1,5,3,3,4,2] as b ,
@@ -110,14 +112,11 @@ UInt8 getEventLevel(Data & data) const
         }
         // 如果开启了严格去重且事件级别对应的时间戳已存在，则返回前一个事件的级别
         // 事件级别1 是特殊的，不需要考虑strict_deduplication
-        // 这里其实是有问题的，如果出现1 3 1 3 这种事件序列，那么返回的是1 ，但是实际上应该是2 才对
         else if (strict_deduplication && events_timestamp[event_idx].has_value())
         {
             return data.events_list[i - 1].second; 
         }
         // 如果开启了严格顺序且存在第一个事件，但前一个事件级别对应的时间戳不存在，则返回第一个空缺的事件级别
-        // 时间戳为null时的情况,同时也会出现一些不一致的情况， 
-        // 当时间序列 [1,3,2,3,4,2] 时，返回为2， 当时间序列[1,3,4,3,4,2] 返回为4 ，函数执行windowFunnel(10,'strict_order')(va, vb =1, vb=3, vb=4,vb=2) 
         else if (strict_order && first_event && !events_timestamp[event_idx - 1].has_value())
         {
             for (size_t event = 0; event < events_timestamp.size(); ++event)
