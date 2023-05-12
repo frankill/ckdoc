@@ -65,7 +65,7 @@ from
         vb  ;
 ```
 
-windowFunnel 函数中计算level的函数实现
+windowFunnel 函数中计算level的函数实现,加了点注释，学习学习，方便更好的使用
   https://github.com/ClickHouse/ClickHouse/blob/master/src/AggregateFunctions/AggregateFunctionWindowFunnel.h#L153
 ``` c++
 UInt8 getEventLevel(Data & data) const
