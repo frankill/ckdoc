@@ -116,7 +116,8 @@ UInt8 getEventLevel(Data & data) const
             return data.events_list[i - 1].second; 
         }
         // 如果开启了严格顺序且存在第一个事件，但前一个事件级别对应的时间戳不存在，则返回第一个空缺的事件级别
-        // 时间戳为null时的情况
+        // 时间戳为null时的情况,同时也会出现一些不一致的情况， 
+        // 当时间序列 [1,3,2,3,4,2] 时，返回为2， 当时间序列[1,3,4,3,4,2] 返回为4 ，函数执行windowFunnel(10,'strict_order')(va, vb =1, vb=3, vb=4,vb=2) 
         else if (strict_order && first_event && !events_timestamp[event_idx - 1].has_value())
         {
             for (size_t event = 0; event < events_timestamp.size(); ++event)
