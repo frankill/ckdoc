@@ -1,5 +1,4 @@
-[png]:
-
+ 
 ``` sql 
 with t as (
     select
@@ -157,8 +156,7 @@ UInt8 getEventLevel(Data & data) const
     return 0;
 }
 ```
-
-![][png]
+ 
 
 ``` c++
 
