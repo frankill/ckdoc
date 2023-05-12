@@ -52,12 +52,9 @@ with [1,5,3,3,4,2] as b ,
      [1,2,3,4,6,5] as a,
 t as ( SELECT a va , b vb  )
 select
-    sequenceCount('(?1)(?t<3)(?2)')(va, vb = 1, vb=4) ta,
-    groupArray(vb) tb,
     windowFunnel(10,'strict_order')(va, vb =1, vb=3, vb=4, vb =2) orders ,
     windowFunnel(10,'strict_deduplication')(va, vb =1, vb=3, vb=4, vb =2) dups, 
     windowFunnel(10,'strict_increase')(va, vb =1, vb=3, vb=4, vb =2) increase, 
-    windowFunnel(10)(va, vb =1, vb=3, vb=4, vb =2)  default -- increase
 from
     t 
     array join 
